@@ -2,8 +2,16 @@ import asyncio
 import discord
 from key import token
 from discord.ext import commands, tasks
+import pandas
+import pandas as pd
+import openpyxl
+import random
+
+
 TOKEN = token.get('TOKEN')
 
+
+CANAL_ID = 1116925952031719435 # ID DO CANAL DE AUTENTICAÇÃO
 GUILD_ID = 1116672058353516614 # ID DO SERVIDOR
 ROLE_ID = 1116702722318684161 # ID DO CARGO - PRETENDENTE
 
@@ -27,10 +35,11 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
+    if message.channel.id == CANAL_ID:
+        await bot.process_commands(message) #processse todos os comandos
 
 
-    await bot.process_commands(message) #processse todos os comandos
-
+########################### APAGAR #################
 @bot.command(name="ajuda")
 ######## COMANDO PARA EXPLICACAO NO SERVIDOR ########
 async def send_hello(ctx):
@@ -41,17 +50,26 @@ async def send_hello(ctx):
 
     await ctx.send(response)
 
+##############################################
+
 @bot.event
 ######## FUNCAO PARA DAR CARGO DE PRETENDENTE #########
 async def on_member_join(member):
     guild = member.guild
     role = discord.utils.get(guild.roles, name='Pretendente')
+    channel = member.guild.system_channel
+    usuario = member.name
+    mensagem = f'Oi {usuario}'
+    await channel.send(mensagem)
+
 
     if role is not None:
         await member.add_roles(role)
         print(f'Added role {role.name} to {member.name}')
     else:
         print(f'Role not found in server {guild.name}. Make sure the role exists.')
+
+
 
 ########################### VERIFICACAO DE EMAIL #########################
 @bot.command(name="verificacao")
@@ -74,12 +92,35 @@ async def verification(ctx):
                 if "@academico.ifpb.edu.br" in resposta.content or "@ifpb.edu.br" in resposta.content:
                     email = resposta.content
                     await ctx.send(f'Ok, irei verificar o e-mail enviado em nosso bando de dados')
-                    break
+
+                    lista_alunos = pd.read_excel('alunos.xlsx')
+                    lista_professores = pd.read_excel('professores.xlsx')
+
+                    email_a_verificar = str(email)
+
+                    verificacao = email_a_verificar in lista_alunos['E-mail academico'].values or email_a_verificar in lista_professores['E-mail'].values
+
+                    if verificacao == True:
+                        print('show')
+                        break
+                        # gera sequencia - codigo
+                    else:
+                        print('Ocorreu um erro, e-mail não existe ou foi digitado de forma incorreta, tente novamente.')
+
+
                 else:
                     await ctx.send(f'Ocorreu um erro, provavelmente o e-mail informado não consta no nosso banco de dados')
             except asyncio.TimeoutError:
                 await ctx.send('Ocorreu um erro, tente novamente!')
             tentativas += 1
 
+
+    if tentativas == 3:
+        # enviar msg no privado colocando dados da coordenação para entrar em contato
+        print('ban')
+    else:
+        codigo = ''.join(random.choices('0123456789', k=6))
+        print(email)
+        print(codigo)
 
 bot.run(TOKEN)
