@@ -6,9 +6,9 @@ def enviar_email(destinatario, sequencia):
     # Configuracoes do servidor de e-mail
     smtp_server = 'smtp.gmail.com'
     smtp_port = 587
-    smtp_username = 'gustavosymoons@gmail.com'
-    smtp_password = 'agqgxkvjelcwvgky'
-    remetente = 'gustavosymoons@gmail.com'
+    smtp_username = 'projeto.bot.discord.ifpb@gmail.com'
+    smtp_password = 'ppjwpxvpprurppek'
+    remetente = 'projeto.bot.discord.ifpb@gmail.com'
 
     # Cria o objeto de e-mail
     mensagem = 'Olá, \n\nSua sequência de verificação é: {}'.format(sequencia)

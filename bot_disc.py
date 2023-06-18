@@ -86,7 +86,7 @@ async def verification(ctx):
                 resposta = await bot.wait_for('message',  check=check, timeout=300)
                 if "@academico.ifpb.edu.br" in resposta.content or "@ifpb.edu.br" in resposta.content:
                     email = resposta.content
-                    await ctx.send(f'Ok, irei verificar o e-mail enviado em nosso bando de dados')
+                    await ctx.send(f'Ok, irei verificar o e-mail enviado em nosso banco de dados')
 
                     lista_alunos = pd.read_excel('alunos.xlsx')
                     lista_professores = pd.read_excel('professores.xlsx')
@@ -97,7 +97,6 @@ async def verification(ctx):
                     verificacao = email_a_verificar in lista_alunos['E-mail academico'].values or email_a_verificar in lista_professores['E-mail'].values
 
                     if verificacao == True:
-
 
                         # GERA UM CODIGO DE VERIFICAÇÃO DE 6 DIGITOS
                         sequencia = ''.join(random.choices('0123456789', k=6))
@@ -114,8 +113,8 @@ async def verification(ctx):
                         mensagem_enviada_email = f"O código de autenticação foi enviado para o E-mail: {email_a_verificar}. Insira o código abaixo para verificação"
                         await ctx.send(mensagem_enviada_email)
 
-
                         # FUNÇÃO QUE VERIFICA MENSAGEM
+
                         def verificar_mensagem(m):
                             return m.author == ctx.author and m.channel == ctx.channel
 
@@ -136,6 +135,7 @@ async def verification(ctx):
 
 
                         # Verificação do código recebido
+
                         if codigo_verificacao[email].codigo == codigo:
                             mensagem = f"Autenticação bem sucedida para o e-mail {email}"
                             del codigo_verificacao[email]
@@ -172,6 +172,34 @@ async def verification(ctx):
             await member.add_roles(role)
 
 
+
+    # Envia mensagem no privado
+    async def envia_msg_pv(ctx):
+        usuario_id = ctx.author.id
+
+        usuario = bot.get_user(usuario_id)
+
+        if usuario is None:
+            print('Nao foi possivel encontrar usuario')
+        else:
+            await usuario.send('Infelizmente você ultrapassou o limite de tentativas para verificação.\n'
+                               'Por esse motivo você foi banido do servidor. Para resolver o problema entre em contato com a coordenação do curso\n'
+                               'Telefone: (83) 0000-0000\n'
+                               'E-mail: ccec.cg@ifpb.edu.br\n'
+                               'Presencial: Bloco X, Sala Y\n'
+                               'Horários de atendimento: 7-11h e 14-17h')
+
+
+    async def bane_usuario(ctx):
+        usuario_id = ctx.author.id
+        try:
+            user = await bot.fetch_user(usuario_id)
+            await ctx.guild.ban(user, reason='tempo limite')
+        except discord.NotFound:
+            print('Usuario nao encontrado')
+
+
+
     async def altera_apelido(ctx, member: discord.Member, *, novo_apelido):
         try:
             await member.edit(nick=novo_apelido)
@@ -183,17 +211,19 @@ async def verification(ctx):
 
     if tentativas == 3:
         # enviar msg no privado colocando dados da coordenação para entrar em contato
+        await envia_msg_pv(ctx)
+        await bane_usuario(ctx)
         print('ban')
     else:
         await remover_cargo(ctx, email)
         planilha = ''
         if "@academico.ifpb.edu.br" in email:
-            id_aluno = 1116710660894638182
+            id_aluno = 1116710660894638182 # id cargo do aluno
             planilha = 'alunos.xlsx'
             await add_cargo_definitivo(ctx, email, id_aluno)
         elif "@ifpb.edu.br" in email:
             id_professor = 1116709968045940797
-            planilha = 'professores.xlsx'
+            planilha = 'professores.xlsx' # id cargo do professor
             await add_cargo_definitivo(ctx, email, id_professor)
         nome = encontra_nome(email, planilha)
         member = ctx.author
