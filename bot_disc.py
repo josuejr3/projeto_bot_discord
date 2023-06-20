@@ -2,7 +2,7 @@ import asyncio
 import discord
 from key import token
 from discord.ext import commands, tasks
-from funcoes import funcao_le_arquivos, enviar_email
+from funcoes import funcao_le_arquivos, enviar_email, bane_usuario, distribui_cargos, encontra_nome_planilha, altera_apelido
 import random
 
 TOKEN = token.get('TOKEN')
@@ -16,7 +16,7 @@ ROLE_ID = 1116702722318684161 # ID DO CARGO - PRETENDENTE
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
-
+intents.bans = True
 bot = commands.Bot(intents=intents, command_prefix="!")
 
 
@@ -84,14 +84,15 @@ async def on_member_join(member):
         else:
             resposta_email = await bot.wait_for('message', check=lambda x: x.author == member)
             tentativas_email += 1
-            email_a_verificar = resposta_email.content
+            email_a_verificar = str(resposta_email.content).lower()
             if "@academico.ifpb.edu.br" in email_a_verificar or "@ifpb.edu.br" in email_a_verificar:
 
                 le_planilha_alunos = funcao_le_arquivos('alunos.csv', 'E-mail academico', email_a_verificar)
                 le_planilha_professores = funcao_le_arquivos('professores.csv', 'E-mail', email_a_verificar)
                 codigo_verificacao = {}
 
-                email = str(email_a_verificar)
+                email = (str(email_a_verificar)).lower()
+                print(email)
 
                 if le_planilha_alunos == True or le_planilha_professores == True:
                     # Gera uma sequencia de numeros aleatorios de 6 digitos para mandar via email
@@ -109,7 +110,8 @@ async def on_member_join(member):
                     print('email enviado')
 
                     for attemps in range(3):
-                        resposta_codigo = await bot.wait_for('message', check=lambda x: x.author == member)
+                        # Alterei e coloquei o .id
+                        resposta_codigo = await bot.wait_for('message', check=lambda x: x.author.id == member.id)
                         # Verificação de fato do código enviado e recebido
                         codigo = resposta_codigo.content
                         print('E-mail consta dentro do banco de dados')
@@ -124,6 +126,7 @@ async def on_member_join(member):
                                 mensagem = f'Autentica falha para o email {email}!'
                                 del codigo_verificacao[email]
                                 print('erro')
+                                ban = True
                                 break
                             else:
                                 mensagem = f'Código incorreto. Tenha certeza que o código fornecido esta correto.'
@@ -135,10 +138,22 @@ async def on_member_join(member):
             else:
                 print('email fora dos padroes')
 
-    if ban == True:
-        print('ban')
+    if ban == True: # arrumar condicional
+        await bane_usuario(member)
+        print('Banimento')
     else:
-        pass
-
+        planilha = ''
+        if "@academico.ifpb.edu.br" in email:
+            planilha = 'alunos.csv'
+        elif "@ifpb.edu.br" in email:
+            planilha = 'professores.csv'
+        nome = encontra_nome_planilha(email, planilha)
+        print('Alterar cargos')
+        print(nome)
+        await distribui_cargos(member, email)
+        await altera_apelido(member, nome)
 
 bot.run(TOKEN)
+
+
+# Falta apenas colocar a biblioteca datetime
