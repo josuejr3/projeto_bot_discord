@@ -60,8 +60,16 @@ async def bane_usuario(member):
                'Presencial: Bloco X, Sala Y\n' \
                'Horários de atendimento: 8-11h e 14-17h'
 
+    embed = discord.Embed(title='Vixe, tomou ban!',
+                          description='Provavelmente você chegou ao limite de tentativas e por isso foi banido',
+                          colour=65280)
+
+    embed.add_field(name='Outros meios de contato', value='E-mail da coordenação: ccec.cg@ifpb.edu.br\nTelefone: '
+                                                          '(83) 0000-0000\nPresencial: Bloco X, Sala Y\n'
+                                                          'Horários de atendimento: 8-11h e 14-17h')
+
     if member is not None:
-        await member.send(mensagem)
+        await member.send(embed=embed)
         await member.guild.ban(member, reason='tempo limite')
         print(f'Usuario banido por {tempo_banimento} tempo')
 

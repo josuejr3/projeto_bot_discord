@@ -2,7 +2,8 @@ import asyncio
 import discord
 from key import token
 from discord.ext import commands, tasks
-from funcoes import funcao_le_arquivos, enviar_email, bane_usuario, distribui_cargos, encontra_nome_planilha, altera_apelido
+from funcoes import funcao_le_arquivos, enviar_email, bane_usuario, distribui_cargos, encontra_nome_planilha
+from funcoes import altera_apelido
 import random
 
 TOKEN = token.get('TOKEN')
@@ -53,13 +54,19 @@ async def on_member_join(member):
     texto_boas_vindas = f"Olá, {usuario} para realizar autenticação e ter acesso ao restante dos servidores, digite seu email acadêmico abaixo.\n" \
                         f"Para alunos: exemplo@academico.ifpb.edu.br\n" \
                         f"Para professores: exemplo@ifpb.edu.br\n" \
-                        f"Caso não tenha e-mail acâdemico clique no link abaixo"
+                        f"Caso não tenha e-mail acâdemico verifique o Card abaixo"
 
     link = 'https://www.youtube.com/watch?v=U2yQ5MqlhUU'
     texto_link = 'Como obter meu e-mail acadêmico'
-    embed = discord.Embed(description=f"[{texto_link}]({link})")
+    embed = discord.Embed(
+        title='Como criar e-mail acadêmico',
+        description='Video explicando o procedimento para criar o e-mail institucional',
+        colour=65280
+    )
 
+    embed.set_image(url='https://i.ytimg.com/vi/U2yQ5MqlhUU/maxresdefault.jpg')
 
+    embed.add_field(name='LINK', value=link)
 
     # Envia Texto de Boas vindas e Embed com link para criar email academico
     await channel.send(texto_boas_vindas)
@@ -78,6 +85,8 @@ async def on_member_join(member):
     email = ""
     ban = False
     while True:
+        channel_id = CANAL_ID
+        channel = bot.get_channel(channel_id)
         if tentativas_email == 3:
             ban = True
             break
@@ -106,8 +115,10 @@ async def on_member_join(member):
                     codigo_verificacao[email].codigo = sequencia
 
                     # Envia uma mensagem no discord avisando o envio do email de verificacao com a sequencia de numeros
-                    mensagem = f'Verificação enviada para o e-mail {email}. Insira o código recebido para confirmar.'
+                    mensagem_que_envia_codigo_email = f'Verificação enviada para o e-mail {email}. Insira o código recebido para confirmar.'
                     print('email enviado')
+
+                    await channel.send(mensagem_que_envia_codigo_email)
 
                     for attemps in range(3):
                         # Alterei e coloquei o .id
@@ -116,27 +127,34 @@ async def on_member_join(member):
                         codigo = resposta_codigo.content
                         print('E-mail consta dentro do banco de dados')
                         if codigo_verificacao[email].codigo == codigo:
-                            mensagem = f'Autenticação bem sucedida para o email {email}!'
+                            mensagem_autenticacao_ok = f'Autenticação bem sucedida para o email {email}!'
                             del codigo_verificacao[email]
-                            print('ok')
+                            print(mensagem_autenticacao_ok)
+                            await channel.send(mensagem_autenticacao_ok)
                             break
                         else:
                             codigo_verificacao[email].tentativas -= 1
                             if codigo_verificacao[email].tentativas == 0:
-                                mensagem = f'Autentica falha para o email {email}!'
+                                mensagem_falha_autenticar_codigos_limite = f'Autenticação falha para o email: {email}!'
                                 del codigo_verificacao[email]
                                 print('erro')
+                                await channel.send(mensagem_falha_autenticar_codigos_limite)
                                 ban = True
                                 break
                             else:
-                                mensagem = f'Código incorreto. Tenha certeza que o código fornecido esta correto.'
-                                print(mensagem)
+                                mensagem_tente_novamente_codigo = f'Código incorreto. Tenha certeza que o código fornecido esta correto.'
+                                print(mensagem_tente_novamente_codigo)
+                                await channel.send(mensagem_tente_novamente_codigo)
                     break
                 else:
-                    print('E-mail não costa no banco de dados')
+                    mensagem_email_fora_planilha = 'O E-mail informado não consta em nosso banco de dados'
+                    print(mensagem_email_fora_planilha)
+                    await channel.send(mensagem_email_fora_planilha)
 
             else:
-                print('email fora dos padroes')
+                mensagem_email_fora_dos_padroes = 'Ocorreu um erro, o e-mail informado não segue os padrões'
+                print(mensagem_email_fora_dos_padroes)
+                await channel.send(mensagem_email_fora_dos_padroes)
 
     if ban == True: # arrumar condicional
         await bane_usuario(member)
