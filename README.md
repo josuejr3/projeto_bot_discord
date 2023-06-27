@@ -9,3 +9,10 @@ Autenticação de Membros: O bot permite a autenticação de novos membros atrav
 Definição de cargos: Após a autenticação bem-sucedida, o bot atribui automaticamente um cargo específico aos membros, proporcionando acesso a determinados canais e permissões no servidor. Isso ajuda a organizar e diferenciar os membros com base em sua autorização.
 
 Controle de tentativas: O bot controla o número de tentativas de autenticação de cada membro, evitando abusos e ataques de força bruta. Se um membro ultrapassar o limite de tentativas permitidas, o bot toma medidas de segurança, banindo-o automaticamente.
+
+Tecnologias utilizadas
+
+* Python: linguagem de programação de sintaxe simples;
+* Discord Developer Portal: site para registrar sua aplicação/bot;
+* Discord.py: Biblioteca para integração com o discord;
+* Pandas: Biblioteca para análise e manipulação de dados;
